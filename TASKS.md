@@ -110,7 +110,7 @@ Estados posibles: `pendiente`, `en progreso`, `en revisión`,
     correctos de la sesión.
   - Tests de integración cubriendo los tres casos. `cargo clippy` sin
     warnings nuevos.
-- **Estado**: pendiente
+- **Estado**: en revisión
 - **Dependencias**: T3
 
 ---

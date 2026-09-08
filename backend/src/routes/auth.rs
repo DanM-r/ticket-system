@@ -4,9 +4,11 @@ use axum::extract::State;
 use axum::http::header::AUTHORIZATION;
 use axum::http::{HeaderMap, StatusCode};
 use axum::Json;
+use serde::Serialize;
 
 use crate::domain::auth_store;
 use crate::errors::AppError;
+use crate::middleware::AuthSession;
 use crate::models::{LoginRequest, LoginResponse, Rol};
 use crate::state::AppState;
 
@@ -73,4 +75,26 @@ pub async fn logout(State(state): State<Arc<AppState>>, headers: HeaderMap) -> S
     }
 
     StatusCode::NO_CONTENT
+}
+
+/// Respuesta pública de `GET /api/auth/me`.
+#[derive(Debug, Serialize)]
+pub struct MeResponse {
+    pub nombre: String,
+    pub rol: Rol,
+}
+
+/// `GET /api/auth/me` — requiere sesión (DESIGN.md 3.6/T4).
+///
+/// Endpoint mínimo de demostración del extractor `AuthSession`: si el
+/// header `Authorization: Bearer <token>` falta o el token no corresponde a
+/// una sesión vigente, la request se rechaza automáticamente con
+/// `401 no_autenticado` antes de llegar a este handler. Si la sesión es
+/// válida, devuelve el `nombre` y `rol` resueltos server-side a partir del
+/// store de sesiones (nunca de datos enviados por el cliente).
+pub async fn me(auth: AuthSession) -> Json<MeResponse> {
+    Json(MeResponse {
+        nombre: auth.nombre,
+        rol: auth.rol,
+    })
 }
