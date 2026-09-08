@@ -4,24 +4,23 @@ use std::sync::RwLock;
 use uuid::Uuid;
 
 use crate::domain::peticion_generator::generar_peticiones;
-use crate::models::Peticion;
+use crate::models::{Peticion, Sesion};
 
 /// Estado compartido del backend, mantenido en memoria del proceso (sin
 /// base de datos externa — ver DESIGN.md 3.4 / 7.1). Se expone envuelto en
 /// `Arc` a los handlers de Axum.
-///
-/// El store de sesiones (`sesiones: RwLock<HashMap<String, Sesion>>`) se
-/// añade en T3, una vez exista el modelo `Sesion`.
 #[derive(Debug, Default)]
 pub struct AppState {
     pub peticiones: RwLock<HashMap<Uuid, Peticion>>,
+    pub sesiones: RwLock<HashMap<String, Sesion>>,
 }
 
 impl AppState {
-    /// Crea un `AppState` vacío, sin peticiones sembradas.
+    /// Crea un `AppState` vacío, sin peticiones sembradas ni sesiones.
     pub fn new() -> Self {
         Self {
             peticiones: RwLock::new(HashMap::new()),
+            sesiones: RwLock::new(HashMap::new()),
         }
     }
 

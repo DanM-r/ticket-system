@@ -86,7 +86,7 @@ Estados posibles: `pendiente`, `en progreso`, `en revisión`,
     `204` (idempotente), sin error.
   - Tests de integración cubriendo los casos anteriores. `cargo clippy` sin
     warnings nuevos.
-- **Estado**: pendiente
+- **Estado**: en revisión
 - **Dependencias**: T1
 
 ---
