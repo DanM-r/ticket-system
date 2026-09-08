@@ -1,28 +1,14 @@
-mod domain;
-mod models;
-mod state;
-
-use axum::{routing::get, Json, Router};
-use serde_json::{json, Value};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tracing_subscriber::EnvFilter;
 
-use state::AppState;
+use backend::routes;
+use backend::state::AppState;
 
 /// Cantidad de peticiones simuladas con las que se siembra el `AppState`
 /// al arrancar el servidor (DESIGN.md 3.4/3.5), para que el portal tenga
 /// datos desde el primer `cargo run`.
 const CANTIDAD_SEED_INICIAL: usize = 15;
-
-/// `GET /api/health` — endpoint público de verificación de salud del servicio.
-async fn health() -> Json<Value> {
-    Json(json!({ "status": "ok" }))
-}
-
-fn build_router() -> Router {
-    Router::new().route("/api/health", get(health))
-}
 
 /// Lee el puerto en el que debe escuchar el servidor desde la variable de
 /// entorno `PORT`, con `8080` como valor por defecto si no está definida o
@@ -49,7 +35,7 @@ async fn main() {
         "AppState sembrado con peticiones simuladas"
     );
 
-    let app = build_router();
+    let app = routes::build_router(state);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
     tracing::info!("Servidor escuchando en http://{addr}");
@@ -60,35 +46,4 @@ async fn main() {
     axum::serve(listener, app)
         .await
         .expect("el servidor finalizó inesperadamente");
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use axum::body::Body;
-    use axum::http::{Request, StatusCode};
-    use tower::ServiceExt;
-
-    #[tokio::test]
-    async fn health_devuelve_ok() {
-        let app = build_router();
-
-        let response = app
-            .oneshot(
-                Request::builder()
-                    .uri("/api/health")
-                    .body(Body::empty())
-                    .unwrap(),
-            )
-            .await
-            .unwrap();
-
-        assert_eq!(response.status(), StatusCode::OK);
-
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
-            .await
-            .unwrap();
-        let json: Value = serde_json::from_slice(&body).unwrap();
-        assert_eq!(json, json!({ "status": "ok" }));
-    }
 }
