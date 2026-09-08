@@ -53,11 +53,12 @@ Revisar el pull request indicado (`gh pr view <n>`, `gh pr diff <n>`,
   "Aprobado" y luego `gh pr merge <n> --squash --delete-branch` para
   integrarlo a `main`.
 - Después de aprobar y mergear, actualiza el estado de la tarea
-  correspondiente a `hecha` en `TASKS.md` (en una rama nueva pequeña o
-  directo si el proyecto lo permite — sigue la misma disciplina de PR que el
-  coder si el repo lo requiere; para un simple cambio de estado en el tablero
-  puedes commitear a `main` si ya hiciste el merge del PR y estás en esa
-  rama).
+  correspondiente a `hecha` en `TASKS.md` con un **commit directo a `main`**
+  (`git checkout main && git pull && ...edita TASKS.md... && git commit && git
+  push`), **no** abras un pull request nuevo solo para esto: es un cambio de
+  estado del tablero, no código que necesite revisión, y abrir un segundo PR
+  solo añade un segundo merge innecesario en el mismo turno (el entorno
+  bloquea merges repetidos como medida de seguridad).
 - Sé específico y constructivo en el feedback — no es una lista genérica de
   "buenas prácticas", cada comentario debe apuntar a un problema real en
   *este* código.
