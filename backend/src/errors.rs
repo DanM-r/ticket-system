@@ -8,9 +8,9 @@ use serde::Serialize;
 /// (DESIGN.md 3.8): `{ "error": { "code", "message" } }`.
 ///
 /// Solo se incluyen aquí las variantes efectivamente usadas hasta esta
-/// tarea, para evitar código muerto; tareas posteriores (T5-T7) añaden las
-/// variantes que necesiten (`PeticionNoEncontrada`, `PeticionYaDecidida`),
-/// siguiendo el mismo patrón.
+/// tarea, para evitar código muerto; tareas posteriores (T6-T7) añaden las
+/// variantes que necesiten (`PeticionYaDecidida`), siguiendo el mismo
+/// patrón.
 #[derive(Debug, thiserror::Error)]
 pub enum AppError {
     #[error("{0}")]
@@ -21,6 +21,12 @@ pub enum AppError {
     /// (DESIGN.md 3.6). Usado por el extractor `AuthSession` (T4).
     #[error("Se requiere un token de sesión válido.")]
     NoAutenticado,
+
+    /// El `id` de la petición es un UUID válido pero no existe en el store
+    /// (DESIGN.md 3.8). Usado por `GET /api/peticiones/:id` (T5) y por los
+    /// endpoints de aprobar/denegar (T6).
+    #[error("La petición solicitada no existe.")]
+    PeticionNoEncontrada,
 }
 
 impl AppError {
@@ -28,6 +34,7 @@ impl AppError {
         match self {
             AppError::DatosInvalidos(_) => "datos_invalidos",
             AppError::NoAutenticado => "no_autenticado",
+            AppError::PeticionNoEncontrada => "peticion_no_encontrada",
         }
     }
 
@@ -35,6 +42,7 @@ impl AppError {
         match self {
             AppError::DatosInvalidos(_) => StatusCode::BAD_REQUEST,
             AppError::NoAutenticado => StatusCode::UNAUTHORIZED,
+            AppError::PeticionNoEncontrada => StatusCode::NOT_FOUND,
         }
     }
 }
