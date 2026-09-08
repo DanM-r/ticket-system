@@ -162,7 +162,7 @@ Estados posibles: `pendiente`, `en progreso`, `en revisión`,
   - Tests de integración cubriendo todos los casos anteriores, incluyendo
     explícitamente el caso de "el body no puede falsificar el decisor".
     `cargo clippy` sin warnings nuevos.
-- **Estado**: en revisión
+- **Estado**: hecha
 - **Dependencias**: T5
 
 ---
