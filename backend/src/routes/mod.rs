@@ -15,5 +15,6 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/api/health", get(health::health))
         .route("/api/auth/login", post(auth::login))
         .route("/api/auth/logout", post(auth::logout))
+        .route("/api/auth/me", get(auth::me))
         .with_state(state)
 }

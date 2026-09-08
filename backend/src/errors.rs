@@ -8,25 +8,33 @@ use serde::Serialize;
 /// (DESIGN.md 3.8): `{ "error": { "code", "message" } }`.
 ///
 /// Solo se incluyen aquí las variantes efectivamente usadas hasta esta
-/// tarea, para evitar código muerto; tareas posteriores (T4-T7) añaden las
-/// variantes que necesiten (`NoAutenticado`, `PeticionNoEncontrada`,
-/// `PeticionYaDecidida`), siguiendo el mismo patrón.
+/// tarea, para evitar código muerto; tareas posteriores (T5-T7) añaden las
+/// variantes que necesiten (`PeticionNoEncontrada`, `PeticionYaDecidida`),
+/// siguiendo el mismo patrón.
 #[derive(Debug, thiserror::Error)]
 pub enum AppError {
     #[error("{0}")]
     DatosInvalidos(String),
+
+    /// Falta el header `Authorization: Bearer <token>`, está mal formado, o
+    /// el token no corresponde a ninguna sesión vigente en el store
+    /// (DESIGN.md 3.6). Usado por el extractor `AuthSession` (T4).
+    #[error("Se requiere un token de sesión válido.")]
+    NoAutenticado,
 }
 
 impl AppError {
     fn code(&self) -> &'static str {
         match self {
             AppError::DatosInvalidos(_) => "datos_invalidos",
+            AppError::NoAutenticado => "no_autenticado",
         }
     }
 
     fn status(&self) -> StatusCode {
         match self {
             AppError::DatosInvalidos(_) => StatusCode::BAD_REQUEST,
+            AppError::NoAutenticado => StatusCode::UNAUTHORIZED,
         }
     }
 }
