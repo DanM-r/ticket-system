@@ -60,7 +60,7 @@ Estados posibles: `pendiente`, `en progreso`, `en revisión`,
     con peticiones (verificable indirectamente una vez exista el endpoint
     de listado en T5, o mediante un test que invoque la función de siembra
     directamente).
-- **Estado**: pendiente
+- **Estado**: en revisión
 - **Dependencias**: T1
 
 ---
