@@ -8,9 +8,8 @@ use serde::Serialize;
 /// (DESIGN.md 3.8): `{ "error": { "code", "message" } }`.
 ///
 /// Solo se incluyen aquí las variantes efectivamente usadas hasta esta
-/// tarea, para evitar código muerto; tareas posteriores (T6-T7) añaden las
-/// variantes que necesiten (`PeticionYaDecidida`), siguiendo el mismo
-/// patrón.
+/// tarea, para evitar código muerto; tareas posteriores (T7) añaden las
+/// variantes que necesiten, siguiendo el mismo patrón.
 #[derive(Debug, thiserror::Error)]
 pub enum AppError {
     #[error("{0}")]
@@ -27,6 +26,12 @@ pub enum AppError {
     /// endpoints de aprobar/denegar (T6).
     #[error("La petición solicitada no existe.")]
     PeticionNoEncontrada,
+
+    /// La petición ya fue aprobada o denegada anteriormente: no puede
+    /// volver a decidirse (DESIGN.md 3.8). Usado por los endpoints
+    /// `POST /api/peticiones/:id/aprobar` y `.../denegar` (T6).
+    #[error("Esta petición ya fue decidida anteriormente.")]
+    PeticionYaDecidida,
 }
 
 impl AppError {
@@ -35,6 +40,7 @@ impl AppError {
             AppError::DatosInvalidos(_) => "datos_invalidos",
             AppError::NoAutenticado => "no_autenticado",
             AppError::PeticionNoEncontrada => "peticion_no_encontrada",
+            AppError::PeticionYaDecidida => "peticion_ya_decidida",
         }
     }
 
@@ -43,6 +49,7 @@ impl AppError {
             AppError::DatosInvalidos(_) => StatusCode::BAD_REQUEST,
             AppError::NoAutenticado => StatusCode::UNAUTHORIZED,
             AppError::PeticionNoEncontrada => StatusCode::NOT_FOUND,
+            AppError::PeticionYaDecidida => StatusCode::CONFLICT,
         }
     }
 }
