@@ -134,7 +134,7 @@ Estados posibles: `pendiente`, `en progreso`, `en revisión`,
     `400 datos_invalidos`.
   - Tests de integración cubriendo todos los casos anteriores. `cargo
     clippy` sin warnings nuevos.
-- **Estado**: en revisión
+- **Estado**: hecha
 - **Dependencias**: T2, T4
 
 ---
