@@ -19,5 +19,7 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/api/auth/me", get(auth::me))
         .route("/api/peticiones", get(peticiones::listar))
         .route("/api/peticiones/:id", get(peticiones::detalle))
+        .route("/api/peticiones/:id/aprobar", post(peticiones::aprobar))
+        .route("/api/peticiones/:id/denegar", post(peticiones::denegar))
         .with_state(state)
 }
