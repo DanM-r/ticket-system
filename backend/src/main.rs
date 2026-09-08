@@ -1,7 +1,19 @@
+mod domain;
+mod models;
+mod state;
+
 use axum::{routing::get, Json, Router};
 use serde_json::{json, Value};
 use std::net::SocketAddr;
+use std::sync::Arc;
 use tracing_subscriber::EnvFilter;
+
+use state::AppState;
+
+/// Cantidad de peticiones simuladas con las que se siembra el `AppState`
+/// al arrancar el servidor (DESIGN.md 3.4/3.5), para que el portal tenga
+/// datos desde el primer `cargo run`.
+const CANTIDAD_SEED_INICIAL: usize = 15;
 
 /// `GET /api/health` — endpoint público de verificación de salud del servicio.
 async fn health() -> Json<Value> {
@@ -29,6 +41,14 @@ async fn main() {
         .init();
 
     let port = read_port();
+
+    let state = Arc::new(AppState::new());
+    let creadas = state.seed_peticiones(CANTIDAD_SEED_INICIAL);
+    tracing::info!(
+        cantidad = creadas,
+        "AppState sembrado con peticiones simuladas"
+    );
+
     let app = build_router();
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
