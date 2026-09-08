@@ -37,7 +37,7 @@ Estados posibles: `pendiente`, `en progreso`, `en revisión`,
   - `cd frontend && npm install && npm run build` compila sin errores.
   - README documenta ambos comandos de arranque y las variables de entorno
     relevantes de esta tarea.
-- **Estado**: pendiente
+- **Estado**: en revisión
 - **Dependencias**: ninguna
 
 ---
