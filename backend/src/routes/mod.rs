@@ -4,13 +4,22 @@ pub mod peticiones;
 
 use std::sync::Arc;
 
+use axum::http::{HeaderValue, Method};
 use axum::routing::{get, post};
 use axum::Router;
+use tower_http::cors::CorsLayer;
 
+use crate::errors::AppError;
 use crate::state::AppState;
 
 /// Construye el router principal de la API montando todas las rutas
-/// disponibles hasta el momento (DESIGN.md 3.2/3.8).
+/// disponibles (DESIGN.md 3.2/3.8), sin CORS. Usado directamente por los
+/// tests de integración (que no necesitan simular un origin de navegador) y
+/// como base de [`build_router_with_cors`], que sí lo usa `main.rs`.
+///
+/// Cualquier ruta no montada cae en [`fallback`], que responde
+/// `404 ruta_no_encontrada` con el mismo formato de error estándar que el
+/// resto de la API, en vez del 404 vacío que produce Axum por defecto (T7).
 pub fn build_router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/api/health", get(health::health))
@@ -18,8 +27,45 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/api/auth/logout", post(auth::logout))
         .route("/api/auth/me", get(auth::me))
         .route("/api/peticiones", get(peticiones::listar))
+        .route("/api/peticiones/generar", post(peticiones::generar))
         .route("/api/peticiones/:id", get(peticiones::detalle))
         .route("/api/peticiones/:id/aprobar", post(peticiones::aprobar))
         .route("/api/peticiones/:id/denegar", post(peticiones::denegar))
+        .fallback(fallback)
         .with_state(state)
+}
+
+/// Handler de `fallback` para cualquier combinación de método/path que no
+/// coincida con ninguna ruta montada (T7). Ver [`build_router`].
+async fn fallback() -> AppError {
+    AppError::RutaNoEncontrada
+}
+
+/// Construye la capa de CORS restringida al `origin` configurado vía
+/// `CORS_ALLOWED_ORIGIN` (DESIGN.md 3.10). No se usa `Any`: el origin
+/// permitido es siempre uno concreto, nunca un comodín, para no exponer la
+/// API a cualquier sitio (DESIGN.md sección 8, checklist de seguridad).
+///
+/// Se permite el header `Authorization` (requerido por el esquema de
+/// sesión por token opaco, DESIGN.md 3.6) y `Content-Type` (requerido para
+/// enviar JSON en el body).
+fn build_cors_layer(allowed_origin: &str) -> CorsLayer {
+    let origin: HeaderValue = allowed_origin
+        .parse()
+        .expect("CORS_ALLOWED_ORIGIN debe ser un origin HTTP válido");
+
+    CorsLayer::new()
+        .allow_origin(origin)
+        .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+        .allow_headers([
+            axum::http::header::AUTHORIZATION,
+            axum::http::header::CONTENT_TYPE,
+        ])
+}
+
+/// Construye el router principal de la API (ver [`build_router`]) con la
+/// capa de CORS aplicada, restringida al `origin` recibido (DESIGN.md 3.10,
+/// T7). Es la función que usa `main.rs` para levantar el servidor real.
+pub fn build_router_with_cors(state: Arc<AppState>, cors_allowed_origin: &str) -> Router {
+    build_router(state).layer(build_cors_layer(cors_allowed_origin))
 }

@@ -1,13 +1,15 @@
 use std::sync::Arc;
 
 use axum::body::Bytes;
-use axum::extract::{Path, Query, State};
+use axum::extract::{Path, State};
+use axum::http::StatusCode;
 use axum::Json;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::domain::peticion_store::{self, DecidirPeticionError};
 use crate::errors::AppError;
+use crate::extractors::ValidatedQuery;
 use crate::middleware::AuthSession;
 use crate::models::{EstadoPeticion, Peticion};
 use crate::state::AppState;
@@ -15,6 +17,15 @@ use crate::state::AppState;
 /// Longitud máxima permitida para `comentario` al aprobar/denegar una
 /// petición (DESIGN.md 3.8).
 const COMENTARIO_MAX_LEN: usize = 500;
+
+/// Cantidad de peticiones a generar por defecto cuando el query param
+/// `cantidad` no se especifica en `POST /api/peticiones/generar`
+/// (DESIGN.md 3.8).
+const CANTIDAD_GENERAR_DEFAULT: u32 = 5;
+/// Rango permitido (inclusive) para el query param `cantidad` de
+/// `POST /api/peticiones/generar` (DESIGN.md 3.8).
+const CANTIDAD_GENERAR_MIN: u32 = 1;
+const CANTIDAD_GENERAR_MAX: u32 = 50;
 
 /// Query params aceptados por `GET /api/peticiones` (DESIGN.md 3.8).
 #[derive(Debug, Deserialize)]
@@ -35,10 +46,13 @@ pub struct ListarPeticionesResponse {
 /// `denegada`). Un valor de `estado` fuera de ese enum responde
 /// `400 datos_invalidos`. La sesión (`_auth`) solo se exige por el
 /// extractor `AuthSession` (T4); no se usa su contenido en este handler.
+/// El query param se extrae con [`ValidatedQuery`] (T7) para que un valor
+/// mal formado responda `400 datos_invalidos` con el formato de error
+/// estándar en vez del rechazo genérico de Axum.
 pub async fn listar(
     _auth: AuthSession,
     State(state): State<Arc<AppState>>,
-    Query(query): Query<ListarPeticionesQuery>,
+    ValidatedQuery(query): ValidatedQuery<ListarPeticionesQuery>,
 ) -> Result<Json<ListarPeticionesResponse>, AppError> {
     let estado = query
         .estado
@@ -166,4 +180,44 @@ pub async fn denegar(
     body: Bytes,
 ) -> Result<Json<Peticion>, AppError> {
     decidir(auth, state, id, EstadoPeticion::Denegada, body).await
+}
+
+/// Query params aceptados por `POST /api/peticiones/generar` (DESIGN.md 3.8).
+#[derive(Debug, Deserialize)]
+pub struct GenerarPeticionesQuery {
+    pub cantidad: Option<u32>,
+}
+
+/// Respuesta de `POST /api/peticiones/generar` (DESIGN.md 3.8).
+#[derive(Debug, Serialize)]
+pub struct GenerarPeticionesResponse {
+    pub creadas: usize,
+}
+
+/// `POST /api/peticiones/generar` — requiere sesión (DESIGN.md 3.8, T7).
+///
+/// Genera `cantidad` peticiones simuladas nuevas reutilizando el generador
+/// de datos de T2 y las agrega al store. `cantidad` es un query param
+/// opcional (default `5`); un valor fuera del rango permitido `1..=50`, o un
+/// valor no numérico, responde `400 datos_invalidos` sin crear ninguna
+/// petición.
+pub async fn generar(
+    _auth: AuthSession,
+    State(state): State<Arc<AppState>>,
+    ValidatedQuery(query): ValidatedQuery<GenerarPeticionesQuery>,
+) -> Result<(StatusCode, Json<GenerarPeticionesResponse>), AppError> {
+    let cantidad = query.cantidad.unwrap_or(CANTIDAD_GENERAR_DEFAULT);
+
+    if !(CANTIDAD_GENERAR_MIN..=CANTIDAD_GENERAR_MAX).contains(&cantidad) {
+        return Err(AppError::DatosInvalidos(format!(
+            "cantidad debe estar entre {CANTIDAD_GENERAR_MIN} y {CANTIDAD_GENERAR_MAX} (recibido: {cantidad})."
+        )));
+    }
+
+    let creadas = state.seed_peticiones(cantidad as usize);
+
+    Ok((
+        StatusCode::CREATED,
+        Json(GenerarPeticionesResponse { creadas }),
+    ))
 }

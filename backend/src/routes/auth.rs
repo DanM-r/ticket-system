@@ -8,6 +8,7 @@ use serde::Serialize;
 
 use crate::domain::auth_store;
 use crate::errors::AppError;
+use crate::extractors::ValidatedJson;
 use crate::middleware::AuthSession;
 use crate::models::{LoginRequest, LoginResponse, Rol};
 use crate::state::AppState;
@@ -29,10 +30,12 @@ fn extraer_bearer_token(headers: &HeaderMap) -> Option<&str> {
 ///
 /// Valida `nombre` (no vacío, máx. 100 caracteres) y `rol` (enum cerrado
 /// `it` | `administracion`), crea una `Sesion` en el store y devuelve un
-/// token opaco.
+/// token opaco. El body se extrae con [`ValidatedJson`] (T7) para que un
+/// JSON malformado responda `400 datos_invalidos` con el formato de error
+/// estándar en vez del rechazo genérico de Axum.
 pub async fn login(
     State(state): State<Arc<AppState>>,
-    Json(payload): Json<LoginRequest>,
+    ValidatedJson(payload): ValidatedJson<LoginRequest>,
 ) -> Result<(StatusCode, Json<LoginResponse>), AppError> {
     let nombre = payload.nombre.trim();
 

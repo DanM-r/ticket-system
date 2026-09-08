@@ -32,6 +32,13 @@ pub enum AppError {
     /// `POST /api/peticiones/:id/aprobar` y `.../denegar` (T6).
     #[error("Esta petición ya fue decidida anteriormente.")]
     PeticionYaDecidida,
+
+    /// No existe ninguna ruta montada para el método/path solicitado. Se usa
+    /// como `fallback` del router (T7) para que incluso un 404 de "ruta
+    /// inexistente" siga el formato de error estándar de la API, en vez del
+    /// 404 vacío que produce Axum por defecto.
+    #[error("El recurso solicitado no existe.")]
+    RutaNoEncontrada,
 }
 
 impl AppError {
@@ -41,6 +48,7 @@ impl AppError {
             AppError::NoAutenticado => "no_autenticado",
             AppError::PeticionNoEncontrada => "peticion_no_encontrada",
             AppError::PeticionYaDecidida => "peticion_ya_decidida",
+            AppError::RutaNoEncontrada => "ruta_no_encontrada",
         }
     }
 
@@ -50,6 +58,7 @@ impl AppError {
             AppError::NoAutenticado => StatusCode::UNAUTHORIZED,
             AppError::PeticionNoEncontrada => StatusCode::NOT_FOUND,
             AppError::PeticionYaDecidida => StatusCode::CONFLICT,
+            AppError::RutaNoEncontrada => StatusCode::NOT_FOUND,
         }
     }
 }
