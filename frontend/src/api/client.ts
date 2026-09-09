@@ -1,0 +1,159 @@
+import type { ApiErrorEnvelope, HealthResponse, Rol } from '../types'
+
+/**
+ * Cliente API del frontend (DESIGN.md 4.5): un wrapper único sobre `fetch`
+ * que:
+ * - antepone `VITE_API_BASE_URL` a la ruta solicitada;
+ * - serializa/deserializa JSON;
+ * - adjunta `Authorization: Bearer <token>` si hay una sesión guardada;
+ * - ante un status >= 400, parsea el cuerpo `{ error: { code, message } }`
+ *   del backend y lanza un `ApiError` tipado.
+ */
+
+const API_BASE_URL: string =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8080'
+
+/**
+ * Clave usada en `localStorage` para persistir la sesión simulada
+ * `{ token, nombre, rol }` (DESIGN.md 4.4). Se centraliza aquí para que el
+ * `AuthContext` (T9) y este cliente lean/escriban siempre el mismo formato.
+ */
+export const SESSION_STORAGE_KEY = 'ticket-system:sesion'
+
+/** Forma de la sesión persistida en `localStorage` (DESIGN.md 3.8/4.4). */
+export interface SesionAlmacenada {
+  token: string
+  nombre: string
+  rol: Rol
+}
+
+/**
+ * Lee el token de sesión actualmente guardado en `localStorage`, si existe
+ * y tiene la forma esperada. Devuelve `null` en cualquier otro caso (sin
+ * sesión, JSON corrupto, `localStorage` no disponible).
+ */
+function leerTokenAlmacenado(): string | null {
+  try {
+    const raw = window.localStorage.getItem(SESSION_STORAGE_KEY)
+    if (!raw) {
+      return null
+    }
+    const sesion = JSON.parse(raw) as Partial<SesionAlmacenada>
+    return typeof sesion.token === 'string' && sesion.token.length > 0 ? sesion.token : null
+  } catch {
+    return null
+  }
+}
+
+/** Error tipado lanzado por [`request`] ante una respuesta de error de la API. */
+export class ApiError extends Error {
+  /** Código de error estable (`snake_case`) devuelto por el backend, ej. `peticion_ya_decidida`. */
+  readonly code: string
+  /** Status HTTP de la respuesta. */
+  readonly status: number
+
+  constructor(code: string, message: string, status: number) {
+    super(message)
+    this.name = 'ApiError'
+    this.code = code
+    this.status = status
+  }
+}
+
+/** Métodos HTTP soportados por el cliente. */
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE'
+
+export interface RequestOptions {
+  method?: HttpMethod
+  /** Cuerpo a serializar como JSON. Se omite si es `undefined`. */
+  body?: unknown
+  /** Query params a anexar a la URL; los valores `undefined` se omiten. */
+  query?: Record<string, string | number | boolean | undefined>
+}
+
+function construirUrl(path: string, query?: RequestOptions['query']): string {
+  const base = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL
+  const rutaRelativa = path.startsWith('/') ? path : `/${path}`
+  const url = new URL(`${base}${rutaRelativa}`)
+
+  if (query) {
+    for (const [clave, valor] of Object.entries(query)) {
+      if (valor !== undefined) {
+        url.searchParams.set(clave, String(valor))
+      }
+    }
+  }
+
+  return url.toString()
+}
+
+/**
+ * Intenta parsear el cuerpo de una respuesta de error con el formato
+ * estándar `{ error: { code, message } }` (DESIGN.md 3.8). Si el cuerpo no
+ * tiene esa forma (ej. una respuesta inesperada del servidor o de un proxy
+ * intermedio), se cae a un código/mensaje genérico en vez de romper.
+ */
+async function parsearError(response: Response): Promise<ApiError> {
+  let code = 'error_desconocido'
+  let message = `La API respondió con status ${response.status}.`
+
+  try {
+    const data = (await response.json()) as Partial<ApiErrorEnvelope>
+    if (data.error?.code && data.error?.message) {
+      code = data.error.code
+      message = data.error.message
+    }
+  } catch {
+    // Cuerpo vacío o no-JSON: se mantienen los valores genéricos.
+  }
+
+  return new ApiError(code, message, response.status)
+}
+
+/**
+ * Wrapper genérico de `fetch` (DESIGN.md 4.5). Lanza [`ApiError`] ante
+ * cualquier status >= 400; para respuestas sin contenido (`204`) devuelve
+ * `undefined` como `T`.
+ */
+export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const { method = 'GET', body, query } = options
+
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+  }
+
+  const token = leerTokenAlmacenado()
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+  }
+
+  let requestBody: string | undefined
+  if (body !== undefined) {
+    headers['Content-Type'] = 'application/json'
+    requestBody = JSON.stringify(body)
+  }
+
+  const response = await fetch(construirUrl(path, query), {
+    method,
+    headers,
+    body: requestBody,
+  })
+
+  if (!response.ok) {
+    throw await parsearError(response)
+  }
+
+  if (response.status === 204) {
+    return undefined as T
+  }
+
+  return (await response.json()) as T
+}
+
+/**
+ * Función concreta de prueba de conexión con el backend: llama a
+ * `GET /api/health` (público, sin autenticación) y devuelve `{ status }`.
+ */
+export function getHealth(): Promise<HealthResponse> {
+  return request<HealthResponse>('/api/health')
+}

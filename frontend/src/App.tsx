@@ -1,15 +1,19 @@
-import './App.css'
+import { Navigate, Route, Routes } from 'react-router-dom'
+import LoginPage from './pages/LoginPage'
+import PeticionesPage from './pages/PeticionesPage'
 
+/**
+ * Define las rutas de la aplicación (DESIGN.md 4.2/4.3). En esta tarea
+ * (T8) las páginas son placeholders navegables; el contenido real
+ * (autenticación, listado, protección de rutas) se agrega en T9-T12.
+ */
 function App() {
   return (
-    <main className="placeholder">
-      <h1>Portal de Autorización de Peticiones</h1>
-      <p>
-        Scaffold inicial del frontend (Vite + React + TypeScript). Las
-        pantallas de login, listado y detalle se implementan en tareas
-        posteriores.
-      </p>
-    </main>
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/peticiones" element={<PeticionesPage />} />
+    </Routes>
   )
 }
 
