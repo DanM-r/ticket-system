@@ -1,14 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { aprobarPeticion, denegarPeticion, obtenerPeticion } from '../api/peticiones'
 import { ApiError } from '../api/client'
-import type { Peticion, Rol } from '../types'
+import type { Peticion } from '../types'
+import { ETIQUETA_ROL } from '../utils/etiquetas'
 import EstadoBadge from './EstadoBadge'
 import SeveridadBadge from './SeveridadBadge'
-
-const ETIQUETA_ROL: Record<Rol, string> = {
-  it: 'IT',
-  administracion: 'Administración',
-}
 
 /** Longitud máxima de `comentario` reflejando la validación del backend (DESIGN.md 3.8). */
 const COMENTARIO_MAX_LEN = 500
@@ -49,6 +45,21 @@ function PeticionDetalle({ id }: PeticionDetalleProps) {
   const [enviando, setEnviando] = useState(false)
   const [errorAccion, setErrorAccion] = useState<string | null>(null)
 
+  // Fetch "silencioso": no toca `cargando`/`errorCarga`, así no dispara el
+  // return temprano de "Cargando…" ni reemplaza la vista completa. Se usa
+  // para refrescar el detalle tras un 409 sin perder `errorAccion` en el
+  // camino (ver `decidir`).
+  const refrescarDetalle = useCallback(async () => {
+    try {
+      const detalle = await obtenerPeticion(id)
+      setPeticion(detalle)
+    } catch {
+      // Si el refresco silencioso falla, se deja la petición como estaba
+      // (con `errorAccion` visible) en vez de romper la vista; el usuario
+      // puede recargar la página si lo necesita.
+    }
+  }, [id])
+
   const cargarDetalle = useCallback(async () => {
     setCargando(true)
     setErrorCarga(null)
@@ -85,9 +96,11 @@ function PeticionDetalle({ id }: PeticionDetalleProps) {
         setErrorAccion(err.message)
         if (err.status === 409) {
           // Otra sesión ya decidió esta petición: refrescamos el detalle
-          // para que la vista deje de ofrecer los botones de acción y
-          // muestre la info de auditoría real (DESIGN.md 3.8/5).
-          void cargarDetalle()
+          // (sin pasar por el loading inicial) para que la vista deje de
+          // ofrecer los botones de acción y muestre la info de auditoría
+          // real, sin perder el mensaje de `errorAccion` en el camino
+          // (DESIGN.md 3.8/5).
+          void refrescarDetalle()
         }
       } else {
         setErrorAccion('No se pudo conectar con el servidor. Intenta de nuevo.')
@@ -141,6 +154,20 @@ function PeticionDetalle({ id }: PeticionDetalleProps) {
         <dd className="peticion-detalle-cuerpo-mensaje">{peticion.cuerpo_mensaje}</dd>
       </dl>
 
+      {/*
+        `errorAccion` se renderiza fuera de la rama `estado === 'pendiente'`
+        a propósito: cuando `decidir()` recibe un 409 y refresca el detalle,
+        `peticion.estado` deja de ser 'pendiente' y la vista cambia a la
+        rama de auditoría. Si este bloque estuviera anidado dentro de esa
+        rama, el mensaje de error desaparecería justo cuando más importa
+        (contradice el criterio de aceptación de T11 sobre 409).
+      */}
+      {errorAccion && (
+        <p className="peticion-detalle-error-accion" role="alert">
+          {errorAccion}
+        </p>
+      )}
+
       {peticion.estado === 'pendiente' ? (
         <section className="peticion-detalle-acciones">
           <label htmlFor="comentario-decision">Comentario (opcional)</label>
@@ -155,12 +182,6 @@ function PeticionDetalle({ id }: PeticionDetalleProps) {
           <p className="peticion-detalle-contador">
             {comentario.length}/{COMENTARIO_MAX_LEN}
           </p>
-
-          {errorAccion && (
-            <p className="peticion-detalle-error-accion" role="alert">
-              {errorAccion}
-            </p>
-          )}
 
           <div className="peticion-detalle-botones">
             <button type="button" onClick={() => void decidir('aprobar')} disabled={enviando}>

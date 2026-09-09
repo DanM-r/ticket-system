@@ -1,11 +1,7 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import PeticionDetalle from '../components/PeticionDetalle'
 import { useAuth } from '../context/AuthContext'
-
-const ETIQUETA_ROL: Record<string, string> = {
-  it: 'IT',
-  administracion: 'Administración',
-}
+import { ETIQUETA_ROL } from '../utils/etiquetas'
 
 /**
  * Página de detalle de una petición (DESIGN.md 4.3/4.6, T11), montada en
