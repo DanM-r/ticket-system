@@ -80,6 +80,24 @@ function leerTokenAlmacenado(): string | null {
   return leerSesionAlmacenada()?.token ?? null
 }
 
+/**
+ * Ante una respuesta `401` de cualquier llamada autenticada, limpia la
+ * sesión local y fuerza una redirección "dura" (`window.location`, no
+ * `react-router`) a `/login` (DESIGN.md 4.4). Se resuelve así, en vez de con
+ * `useNavigate`, porque este cliente vive fuera del árbol de React y no
+ * tiene acceso al router; la recarga completa además asegura que
+ * `AuthContext` se reinicialice desde `localStorage` (ya vacío) en vez de
+ * quedar con estado inconsistente. Es un caso esperado si el backend se
+ * reinicia y pierde las sesiones en memoria (ver DESIGN.md 7.4), o si el
+ * token fue invalidado por un logout en otra pestaña.
+ */
+function manejarNoAutenticado(): void {
+  limpiarSesionAlmacenada()
+  if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+    window.location.href = '/login'
+  }
+}
+
 /** Error tipado lanzado por [`request`] ante una respuesta de error de la API. */
 export class ApiError extends Error {
   /** Código de error estable (`snake_case`) devuelto por el backend, ej. `peticion_ya_decidida`. */
@@ -175,7 +193,11 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   })
 
   if (!response.ok) {
-    throw await parsearError(response)
+    const error = await parsearError(response)
+    if (response.status === 401) {
+      manejarNoAutenticado()
+    }
+    throw error
   }
 
   if (response.status === 204) {
