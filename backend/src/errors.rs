@@ -32,6 +32,22 @@ pub enum AppError {
     /// `POST /api/peticiones/:id/aprobar` y `.../denegar` (T6).
     #[error("Esta petición ya fue decidida anteriormente.")]
     PeticionYaDecidida,
+
+    /// No existe ninguna ruta montada para el método/path solicitado. Se usa
+    /// como `fallback` del router (T7) para que incluso un 404 de "ruta
+    /// inexistente" siga el formato de error estándar de la API, en vez del
+    /// 404 vacío que produce Axum por defecto.
+    #[error("El recurso solicitado no existe.")]
+    RutaNoEncontrada,
+
+    /// El path existe pero no soporta el método HTTP usado (ej. `DELETE
+    /// /api/peticiones`). A diferencia de [`AppError::RutaNoEncontrada`],
+    /// Axum resuelve este caso dentro del `MethodRouter` de la ruta, antes
+    /// de llegar al `fallback` del router (que solo se activa si ningún
+    /// path coincide) — por eso se intercepta con una capa dedicada que
+    /// reescribe cualquier `405` a este formato estándar (T7).
+    #[error("El método HTTP usado no está permitido para este recurso.")]
+    MetodoNoPermitido,
 }
 
 impl AppError {
@@ -41,6 +57,8 @@ impl AppError {
             AppError::NoAutenticado => "no_autenticado",
             AppError::PeticionNoEncontrada => "peticion_no_encontrada",
             AppError::PeticionYaDecidida => "peticion_ya_decidida",
+            AppError::RutaNoEncontrada => "ruta_no_encontrada",
+            AppError::MetodoNoPermitido => "metodo_no_permitido",
         }
     }
 
@@ -50,6 +68,8 @@ impl AppError {
             AppError::NoAutenticado => StatusCode::UNAUTHORIZED,
             AppError::PeticionNoEncontrada => StatusCode::NOT_FOUND,
             AppError::PeticionYaDecidida => StatusCode::CONFLICT,
+            AppError::RutaNoEncontrada => StatusCode::NOT_FOUND,
+            AppError::MetodoNoPermitido => StatusCode::METHOD_NOT_ALLOWED,
         }
     }
 }

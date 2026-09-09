@@ -36,7 +36,7 @@ curl http://localhost:8080/api/health
 | Variable              | Default                   | Descripción |
 |-----------------------|----------------------------|-------------|
 | `PORT`                 | `8080`                     | Puerto en el que escucha el servidor HTTP. |
-| `CORS_ALLOWED_ORIGIN`   | `http://localhost:5173`     | Origin permitido por CORS (frontend en desarrollo). Se usa a partir de la tarea T7. |
+| `CORS_ALLOWED_ORIGIN`   | `http://localhost:5173`     | Origin permitido por CORS (frontend en desarrollo). Es un valor exacto, nunca `*`. |
 | `RUST_LOG`               | `info`                       | Nivel de logging estructurado (`tracing`). |
 
 No hay archivo `.env` para el backend en esta etapa: las variables se pasan

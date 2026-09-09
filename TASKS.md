@@ -194,7 +194,7 @@ Estados posibles: `pendiente`, `en progreso`, `en revisión`,
     respuesta `Access-Control-Allow-Origin` en un test o documentando la
     verificación manual en la descripción del PR).
   - `cargo test` y `cargo clippy` sin warnings nuevos.
-- **Estado**: pendiente
+- **Estado**: en revisión
 - **Dependencias**: T6
 
 ---
