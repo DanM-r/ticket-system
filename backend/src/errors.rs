@@ -39,6 +39,15 @@ pub enum AppError {
     /// 404 vacío que produce Axum por defecto.
     #[error("El recurso solicitado no existe.")]
     RutaNoEncontrada,
+
+    /// El path existe pero no soporta el método HTTP usado (ej. `DELETE
+    /// /api/peticiones`). A diferencia de [`AppError::RutaNoEncontrada`],
+    /// Axum resuelve este caso dentro del `MethodRouter` de la ruta, antes
+    /// de llegar al `fallback` del router (que solo se activa si ningún
+    /// path coincide) — por eso se intercepta con una capa dedicada que
+    /// reescribe cualquier `405` a este formato estándar (T7).
+    #[error("El método HTTP usado no está permitido para este recurso.")]
+    MetodoNoPermitido,
 }
 
 impl AppError {
@@ -49,6 +58,7 @@ impl AppError {
             AppError::PeticionNoEncontrada => "peticion_no_encontrada",
             AppError::PeticionYaDecidida => "peticion_ya_decidida",
             AppError::RutaNoEncontrada => "ruta_no_encontrada",
+            AppError::MetodoNoPermitido => "metodo_no_permitido",
         }
     }
 
@@ -59,6 +69,7 @@ impl AppError {
             AppError::PeticionNoEncontrada => StatusCode::NOT_FOUND,
             AppError::PeticionYaDecidida => StatusCode::CONFLICT,
             AppError::RutaNoEncontrada => StatusCode::NOT_FOUND,
+            AppError::MetodoNoPermitido => StatusCode::METHOD_NOT_ALLOWED,
         }
     }
 }

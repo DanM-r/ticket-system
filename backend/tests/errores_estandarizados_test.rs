@@ -156,6 +156,30 @@ async fn ruta_inexistente_devuelve_404_con_formato_estandar() {
 }
 
 #[tokio::test]
+async fn metodo_no_soportado_sobre_ruta_existente_devuelve_405_con_formato_estandar() {
+    // Caso reportado en revisión de T7 (PR #8): `DELETE /api/peticiones` es
+    // un método no soportado sobre un path que sí existe. Axum resuelve
+    // este caso dentro del `MethodRouter` de la ruta, antes de llegar al
+    // `fallback` del router (que solo se activa si ningún path coincide),
+    // así que sin la capa dedicada devolvería el 405 vacío por defecto de
+    // Axum en vez del formato estándar de error.
+    let response = app()
+        .oneshot(
+            Request::builder()
+                .method("DELETE")
+                .uri("/api/peticiones")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::METHOD_NOT_ALLOWED);
+    let json = body_json(response).await;
+    assert_error_estandar(&json, "metodo_no_permitido");
+}
+
+#[tokio::test]
 async fn no_autenticado_sigue_el_formato_estandar_como_referencia() {
     let response = app()
         .oneshot(
