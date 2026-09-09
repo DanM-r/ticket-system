@@ -5,11 +5,7 @@ import { ApiError } from '../api/client'
 import PeticionesTable from '../components/PeticionesTable'
 import { useAuth } from '../context/AuthContext'
 import type { EstadoPeticion, Peticion } from '../types'
-
-const ETIQUETA_ROL: Record<string, string> = {
-  it: 'IT',
-  administracion: 'Administración',
-}
+import { ETIQUETA_ROL } from '../utils/etiquetas'
 
 /** Valores del filtro de estado, agregando `'todas'` al enum del backend. */
 type FiltroEstado = EstadoPeticion | 'todas'
