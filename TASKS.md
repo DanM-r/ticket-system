@@ -244,7 +244,7 @@ Estados posibles: `pendiente`, `en progreso`, `en revisión`,
     (leída de `localStorage`) sin pedir login de nuevo.
   - Intentar acceder a `/peticiones` sin sesión redirige a `/login`.
   - Logout limpia `localStorage` y redirige a `/login`.
-- **Estado**: en revisión
+- **Estado**: hecha
 - **Dependencias**: T8, T3
 
 ---
