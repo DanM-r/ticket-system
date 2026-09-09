@@ -268,7 +268,7 @@ Estados posibles: `pendiente`, `en progreso`, `en revisión`,
   - Si el backend no responde o responde `401`, se muestra manejo de error
     apropiado (mensaje o redirección a login, según corresponda).
   - `npm run build` compila sin errores de tipo.
-- **Estado**: en revisión
+- **Estado**: hecha
 - **Dependencias**: T9
 
 ---
