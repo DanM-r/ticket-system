@@ -28,21 +28,56 @@ export interface SesionAlmacenada {
 }
 
 /**
- * Lee el token de sesión actualmente guardado en `localStorage`, si existe
- * y tiene la forma esperada. Devuelve `null` en cualquier otro caso (sin
- * sesión, JSON corrupto, `localStorage` no disponible).
+ * Lee la sesión actualmente guardada en `localStorage`, si existe y tiene
+ * la forma esperada (`token`, `nombre`, `rol` válidos). Devuelve `null` en
+ * cualquier otro caso (sin sesión, JSON corrupto, `localStorage` no
+ * disponible). Usada por [`AuthContext`](../context/AuthContext.tsx) (T9)
+ * para inicializar la sesión de React al cargar la app, y por este cliente
+ * para adjuntar el header `Authorization`.
  */
-function leerTokenAlmacenado(): string | null {
+export function leerSesionAlmacenada(): SesionAlmacenada | null {
   try {
     const raw = window.localStorage.getItem(SESSION_STORAGE_KEY)
     if (!raw) {
       return null
     }
     const sesion = JSON.parse(raw) as Partial<SesionAlmacenada>
-    return typeof sesion.token === 'string' && sesion.token.length > 0 ? sesion.token : null
+    if (
+      typeof sesion.token === 'string' &&
+      sesion.token.length > 0 &&
+      typeof sesion.nombre === 'string' &&
+      (sesion.rol === 'it' || sesion.rol === 'administracion')
+    ) {
+      return { token: sesion.token, nombre: sesion.nombre, rol: sesion.rol }
+    }
+    return null
   } catch {
     return null
   }
+}
+
+/** Persiste la sesión activa en `localStorage` (DESIGN.md 4.4). */
+export function guardarSesionAlmacenada(sesion: SesionAlmacenada): void {
+  try {
+    window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sesion))
+  } catch {
+    // `localStorage` no disponible (ej. modo privado estricto): la sesión
+    // queda solo en el estado de React para la pestaña actual.
+  }
+}
+
+/** Elimina la sesión persistida en `localStorage` (ej. al hacer logout). */
+export function limpiarSesionAlmacenada(): void {
+  try {
+    window.localStorage.removeItem(SESSION_STORAGE_KEY)
+  } catch {
+    // no-op: si `localStorage` no está disponible, no había nada que limpiar.
+  }
+}
+
+/** Token de la sesión guardada en `localStorage`, o `null` si no hay sesión. */
+function leerTokenAlmacenado(): string | null {
+  return leerSesionAlmacenada()?.token ?? null
 }
 
 /** Error tipado lanzado por [`request`] ante una respuesta de error de la API. */
