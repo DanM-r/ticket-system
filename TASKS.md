@@ -221,7 +221,7 @@ Estados posibles: `pendiente`, `en progreso`, `en revisión`,
     auth.
   - Rutas `/login` y `/peticiones` navegables (aunque el contenido sea
     placeholder en esta tarea).
-- **Estado**: en revisión
+- **Estado**: hecha
 - **Dependencias**: T7
 
 ---
