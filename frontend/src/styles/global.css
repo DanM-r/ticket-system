@@ -141,3 +141,67 @@ body {
   background: #f8d7da;
   color: #8a1c27;
 }
+
+.peticion-detalle-error {
+  color: #b00020;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.peticion-detalle-campos {
+  display: grid;
+  grid-template-columns: 12rem 1fr;
+  gap: 0.5rem 1rem;
+  margin: 0 0 1.5rem;
+}
+
+.peticion-detalle-campos dt {
+  font-weight: 600;
+  color: #444;
+}
+
+.peticion-detalle-campos dd {
+  margin: 0;
+}
+
+.peticion-detalle-cuerpo-mensaje {
+  white-space: pre-wrap;
+}
+
+.peticion-detalle-acciones,
+.peticion-detalle-auditoria {
+  border-top: 1px solid #ddd;
+  padding-top: 1rem;
+}
+
+.peticion-detalle-acciones textarea {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  font: inherit;
+  padding: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.peticion-detalle-contador {
+  color: #777;
+  font-size: 0.85rem;
+  margin: 0.25rem 0 0.75rem;
+}
+
+.peticion-detalle-botones {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.peticion-detalle-botones button {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.peticion-detalle-error-accion {
+  color: #b00020;
+  margin: 0 0 0.75rem;
+}

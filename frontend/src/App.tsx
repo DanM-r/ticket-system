@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
 import { AuthProvider } from './context/AuthContext'
 import LoginPage from './pages/LoginPage'
+import PeticionDetallePage from './pages/PeticionDetallePage'
 import PeticionesPage from './pages/PeticionesPage'
 
 /**
@@ -21,6 +22,14 @@ function App() {
           element={
             <ProtectedRoute>
               <PeticionesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/peticiones/:id"
+          element={
+            <ProtectedRoute>
+              <PeticionDetallePage />
             </ProtectedRoute>
           }
         />
