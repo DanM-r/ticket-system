@@ -48,10 +48,96 @@ body {
   margin: 0.5rem 0 0;
 }
 
+.peticiones-page {
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
 .peticiones-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 2rem;
+}
+
+.peticiones-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.peticiones-toolbar select {
+  padding: 0.35rem 0.5rem;
+  font-size: 1rem;
+}
+
+.peticiones-vacio {
+  color: #555;
+  font-style: italic;
+}
+
+.peticiones-error {
+  color: #b00020;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.peticiones-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.peticiones-table th,
+.peticiones-table td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-estado-pendiente {
+  background: #fff3cd;
+  color: #7a5b00;
+}
+
+.badge-estado-aprobada {
+  background: #d4edda;
+  color: #1e6b32;
+}
+
+.badge-estado-denegada {
+  background: #f8d7da;
+  color: #8a1c27;
+}
+
+.badge-severidad-baja {
+  background: #e2f0ff;
+  color: #1d4f8a;
+}
+
+.badge-severidad-media {
+  background: #fff3cd;
+  color: #7a5b00;
+}
+
+.badge-severidad-alta {
+  background: #ffe0c2;
+  color: #8a4a00;
+}
+
+.badge-severidad-critica {
+  background: #f8d7da;
+  color: #8a1c27;
 }
