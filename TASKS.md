@@ -292,7 +292,7 @@ Estados posibles: `pendiente`, `en progreso`, `en revisión`,
     concurrente desde otra sesión) o `400` (comentario inválido), se
     muestra un mensaje de error legible sin romper la vista.
   - `npm run build` compila sin errores de tipo.
-- **Estado**: pendiente
+- **Estado**: en revisión
 - **Dependencias**: T10
 
 ---
