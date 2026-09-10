@@ -1,5 +1,11 @@
 import { request } from './client'
-import type { DecidirPeticionRequest, EstadoPeticion, ListarPeticionesResponse, Peticion } from '../types'
+import type {
+  DecidirPeticionRequest,
+  EstadoPeticion,
+  GenerarPeticionesResponse,
+  ListarPeticionesResponse,
+  Peticion,
+} from '../types'
 
 /**
  * Llama a `GET /api/peticiones` (DESIGN.md 3.8/4.6), opcionalmente filtrando
@@ -38,4 +44,18 @@ export function aprobarPeticion(id: string, body: DecidirPeticionRequest = {}): 
  */
 export function denegarPeticion(id: string, body: DecidirPeticionRequest = {}): Promise<Peticion> {
   return request<Peticion>(`/api/peticiones/${id}/denegar`, { method: 'POST', body })
+}
+
+/**
+ * Llama a `POST /api/peticiones/generar` (DESIGN.md 3.8/4.6, T12). `cantidad`
+ * es opcional (el backend usa `5` como default si se omite); el backend
+ * valida que esté en el rango `1..=50` y responde `400 datos_invalidos` si
+ * no lo está, sin crear ninguna petición. El cliente ([`GenerarPeticionesButton`])
+ * valida el mismo rango antes de llamar, para no depender de esa respuesta.
+ */
+export function generarPeticiones(cantidad?: number): Promise<GenerarPeticionesResponse> {
+  return request<GenerarPeticionesResponse>('/api/peticiones/generar', {
+    method: 'POST',
+    query: { cantidad },
+  })
 }

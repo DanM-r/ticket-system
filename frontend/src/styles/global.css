@@ -86,6 +86,39 @@ body {
   gap: 1rem;
 }
 
+.generar-peticiones {
+  margin-bottom: 1.5rem;
+}
+
+.generar-peticiones label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.generar-peticiones-controles {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.generar-peticiones-controles input {
+  width: 5rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 1rem;
+}
+
+.generar-peticiones-controles button {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.generar-peticiones-error {
+  color: #b00020;
+  margin: 0.5rem 0 0;
+}
+
 .peticiones-table {
   width: 100%;
   border-collapse: collapse;
