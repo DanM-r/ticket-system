@@ -337,7 +337,7 @@ Estados posibles: `pendiente`, `en progreso`, `en revisión`,
     error para las llamadas a la API usadas en el flujo principal.
   - La descripción del PR incluye una revisión explícita del checklist de
     seguridad de DESIGN.md sección 8, ítem por ítem.
-- **Estado**: en revisión
+- **Estado**: hecha
 - **Dependencias**: T12
 
 ---
