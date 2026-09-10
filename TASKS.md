@@ -312,7 +312,7 @@ Estados posibles: `pendiente`, `en progreso`, `en revisión`,
   - Al generar exitosamente, el listado se actualiza mostrando las nuevas
     peticiones sin recargar la página completa.
   - `npm run build` compila sin errores de tipo.
-- **Estado**: pendiente
+- **Estado**: en revisión
 - **Dependencias**: T11
 
 ---

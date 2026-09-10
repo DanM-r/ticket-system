@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { listarPeticiones } from '../api/peticiones'
 import { ApiError } from '../api/client'
+import GenerarPeticionesButton from '../components/GenerarPeticionesButton'
 import PeticionesTable from '../components/PeticionesTable'
 import { useAuth } from '../context/AuthContext'
 import type { EstadoPeticion, Peticion } from '../types'
@@ -18,13 +19,16 @@ const OPCIONES_FILTRO: { valor: FiltroEstado; etiqueta: string }[] = [
 ]
 
 /**
- * Página de listado de peticiones (DESIGN.md 4.3/4.6/4.7, T10). Consume
+ * Página de listado de peticiones (DESIGN.md 4.3/4.6/4.7, T10/T12). Consume
  * `GET /api/peticiones` con filtro opcional por `estado`, maneja
  * explícitamente carga/vacío/error, y delega la tabla propiamente a
  * [`PeticionesTable`]. Ante un `401` de la API, el cliente
  * ([`../api/client`], T10) ya limpia la sesión local y redirige a `/login`
  * (DESIGN.md 4.4); el estado de error de esta página cubre el resto de los
  * casos (red caída, errores 4xx/5xx no relacionados con autenticación).
+ * También monta [`GenerarPeticionesButton`] (T12), pasándole
+ * `cargarPeticiones` como callback de refresco tras generar exitosamente,
+ * para que el listado se actualice sin recargar la página completa.
  */
 function PeticionesPage() {
   const { sesion, cerrarSesion } = useAuth()
@@ -91,6 +95,8 @@ function PeticionesPage() {
           ))}
         </select>
       </div>
+
+      <GenerarPeticionesButton onGenerado={() => void cargarPeticiones(filtro)} />
 
       {cargando && <p role="status">Cargando peticiones…</p>}
 
